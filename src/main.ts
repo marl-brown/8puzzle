@@ -1,10 +1,25 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
-import * from './8puzzle.ts'
+import "./style.css";
+import typescriptLogo from "./typescript.svg";
+import viteLogo from "/vite.svg";
+import { setupCounter } from "./counter.ts";
+import { Board } from "./8puzzle.ts";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+const board = new Board(
+  [
+    [0, 1, 3],
+    [4, 2, 5],
+    [7, 8, 6],
+  ],
+  [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 0],
+  ]
+);
+console.info(board.hamming(), board.manhattan());
+board.toString();
+
+document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
     <a href="https://vite.dev" target="_blank">
       <img src="${viteLogo}" class="logo" alt="Vite logo" />
@@ -20,6 +35,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       Click on the Vite and TypeScript logos to learn more
     </p>
   </div>
-`
+`;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+setupCounter(document.querySelector<HTMLButtonElement>("#counter")!);
