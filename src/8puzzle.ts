@@ -58,12 +58,14 @@ export class Board {
   }
 
   fScore() {
+    const weight = 1
     // console.info(this.manhattan(), this.moveNumber);
-    return this.manhattan() + this.moveNumber;
+    return (this.manhattan() * weight) //+ this.hamming() //+ this.moveNumber;
   }
 
   manhattan() {
     let i = 0;
+    const weight = 1
     for (let row = 0; row < this.board.length; row++) {
       for (let col = 0; col < this.board[0].length; col++) {
         if (this.board[row][col] == 0) continue;
@@ -76,7 +78,9 @@ export class Board {
         }
       }
     }
-    return i;
+    // this.toString()
+    // console.log(i)
+    return i * weight;
   }
 
   isInsideBoard([row, col]: TCoord) {
@@ -150,22 +154,31 @@ class Solver {
   solver() {
     const openBoards: Board[] = [this.board];
     const closedBoards = new Map();
-    let moveNumber = 0;
     let j = 0;
     while (openBoards.length > 0) {
-      openBoards.sort((a, b) => b.fScore() - a.fScore());
+      openBoards.sort((a, b) => {
+        const aScore = a.fScore()
+        const bScore = b.fScore()
+        const hScore = bScore - aScore
+        if (hScore== 0) {
+          return a.moveNumber - b.moveNumber
+        }
+        return hScore
+      });
 
       const currentBoard = openBoards.pop()!;
-      console.log(currentBoard.fScore());
+      // console.log(currentBoard.fScore());
       const closedItemValue =
         closedBoards.get(JSON.stringify(currentBoard.board)) || 0;
       closedBoards.set(JSON.stringify(currentBoard.board), closedItemValue + 1);
-      moveNumber += 1;
-      if (moveNumber > 1000) {
-        console.error("j equals ", j);
+      currentBoard.moveNumber += 1
+      if (currentBoard.moveNumber > 1000) {
+        console.error("exhausted j equals ", j);
         return;
       }
       if (currentBoard?.equal(currentBoard.boardGoal)) {
+        console.error(closedBoards)
+        console.error("complete j equals ", j, currentBoard.moveNumber);
         this.solvedBoardTail = currentBoard;
         return this.solvedBoardTail;
       }
@@ -175,7 +188,7 @@ class Solver {
 
       for (const [x, y] of nextMovesArray) {
         // swap numbers from xy with currentBoard.boardGoalLookup[0]
-        const newBoard = new Board(currentBoard.board, moveNumber);
+        const newBoard = new Board(currentBoard.board, currentBoard.moveNumber +1);
         const numberToSwitchWith = newBoard.board[x][y];
         newBoard.board[zX][zY] = numberToSwitchWith;
         newBoard.board[x][y] = 0;
@@ -183,20 +196,28 @@ class Solver {
         if (closedBoards.has(JSON.stringify(newBoard.board))) {
           continue;
         }
-        j += 1;
 
+        // if (newBoard.manhattan() == 0) {
+        //   console.log('asfdsadfs', j, newBoard.moveNumber)
+        //   newBoard.parent = currentBoard
+        //   this.solvedBoardTail = newBoard
+        //   return this.solvedBoardTail 
+        // }
+        
         const inOpen = openBoards.findIndex((board) =>
           board.equal(newBoard.board)
         );
         if (inOpen > -1) {
           const theBoard = openBoards[inOpen];
+          console.log('hello, ', theBoard.moveNumber, newBoard.moveNumber)
           if (newBoard.moveNumber < theBoard.moveNumber) {
+            console.log('bye bye ')
             theBoard.moveNumber = newBoard.moveNumber;
             theBoard.parent = currentBoard;
-            continue;
           }
           continue;
         }
+        j += 1;
 
         //push new Board to the openBoards
         newBoard.updateBoardLookup();
@@ -257,14 +278,25 @@ console.log(
 );
 // const board = new Board([ // the 0 and 8 requires a max of 11 moves
 //   [1, 2, 3],
+//   [4, 5, 6],
+//   [0, 7, 8],
+// ]);
+// const board = new Board([ // the 0 and 8 requires a max of 11 moves
+//   [1, 2, 3],
 //   [6, 0, 8],
+//   [4, 7, 5],
+// ]);
+// const board = new Board([
+//   // the 8 and 0 breaks
+//   [1, 2, 3],
+//   [6, 8, 0],
 //   [4, 7, 5],
 // ]);
 const board = new Board([
   // the 8 and 0 breaks
-  [1, 2, 3],
-  [6, 8, 0],
-  [4, 7, 5],
+  [8, 7, 6],
+  [2, 5, 4],
+  [1, 0, 3],
 ]);
 const a = new Solver(board);
 
@@ -273,7 +305,13 @@ if (a.isSolvable()) {
   console.log("hello");
   // console.log(board.manhattan());
   a.solver();
-  console.info(a.moves(), a.solution());
+  const res = a.solution()
+  res.forEach(v => {
+    console.log('----------')
+    v.toString()
+    console.log('----------')
+  })
+  console.info(a.moves());
 }
 
 /**
